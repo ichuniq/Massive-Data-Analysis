@@ -26,8 +26,10 @@ def map_add_back(p):
 
 
 def compute_pagerank(sc, nodes_set, N, in_file, iterations=20):
+    raw = sc.textFile(in_file)
+    headers = raw.take(4)
     
-    rdd = sc.textFile(in_file).map(map_line)
+    rdd = raw.filter(lambda x: x!= headers).map(map_line)
     # make (source, ([dest1, dest2, ..]) pair
     links = rdd.groupByKey()
     
@@ -58,6 +60,8 @@ def compute_pagerank(sc, nodes_set, N, in_file, iterations=20):
 def get_N(in_file):
     nodes = set()
     with open(in_file, 'r') as f:
+        # skip header
+        f.readline();f.readline();f.readline();f.readline()
         for line in f.readlines():
             src, dest = line.split()
             if src not in nodes:
@@ -72,7 +76,6 @@ if __name__ == '__main__':
     sc = SparkContext.getOrCreate(conf=conf)
 
     in_file = "p2p-Gnutella04.txt"
-    #in_file = "test.txt"
 
     nodes_set, N = get_N(in_file)
     print("nodes: ", N)
